@@ -322,7 +322,6 @@ class FlashAttentionMetadataBuilder(
                                           max_seq_len=max_seq_len,
                                           causal=causal)
         # For FA3 + full cudagraph
-        max_num_splits = 0
         if self.use_full_cuda_graph and scheduler_metadata is not None:
             n = scheduler_metadata.shape[0]
             self.scheduler_metadata[:n] = scheduler_metadata
@@ -332,13 +331,6 @@ class FlashAttentionMetadataBuilder(
             # output buffer.
             self.scheduler_metadata[n:] = 0
             scheduler_metadata = self.scheduler_metadata[:n]
-
-            if num_actual_tokens <= self.max_cudagraph_size:
-                # NOTE(woosuk): Setting num_splits > 1 may increase the memory
-                # usage, because the intermediate buffers of size [num_splits,
-                # num_heads, num_tokens, head_size] are allocated. Therefore,
-                # we only set num_splits when using cuda graphs.
-                max_num_splits = self.max_num_splits
 
         attn_metadata = FlashAttentionMetadata(
             num_actual_tokens=num_actual_tokens,
@@ -355,7 +347,7 @@ class FlashAttentionMetadataBuilder(
             prefix_kv_lens=prefix_kv_lens,
             suffix_kv_lens=suffix_kv_lens,
             prefix_scheduler_metadata=prefix_scheduler_metadata,
-            max_num_splits=max_num_splits,
+            max_num_splits=self.max_num_splits,
             causal=causal)
         return attn_metadata
 
