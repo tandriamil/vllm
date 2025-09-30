@@ -494,7 +494,11 @@ def get_gaudi_sw_version():
 
 
 def get_vllm_version() -> str:
-    version = get_version(write_to="vllm/_version.py")
+    try:
+        version = get_version(write_to="vllm/_version.py")
+    except LookupError:
+        version = "0.10.2"
+
     sep = "+" if "+" not in version else "."  # dev versions might contain +
 
     if _no_device():
